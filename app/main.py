@@ -1,12 +1,14 @@
 from fastapi import FastAPI
-
-# from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.auth import router as auth_router
 from app.trainer import router as trainer_router
 from app.leaderboard import router as leaderboard_router
+from app.database import engine, Base
 
 app = FastAPI(title="Арифметический тренажёр")
+
+# Создаём таблицы при старте
+Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(trainer_router, prefix="/trainer", tags=["trainer"])
