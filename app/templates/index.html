@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Арифметический тренажёр</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f4f8; display: flex; justify-content: center; padding: 20px; }
+        .container { max-width: 600px; width: 100%; }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
+        button { background: #4a90d9; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #357abd; }
+        button.secondary { background: #6c757d; }
+        button.secondary:hover { background: #545b62; }
+        .problem { font-size: 32px; text-align: center; margin: 20px 0; font-weight: bold; color: #333; }
+        .result { text-align: center; font-size: 20px; margin: 12px 0; padding: 12px; border-radius: 8px; }
+        .correct { background: #d4edda; color: #155724; }
+        .wrong { background: #f8d7da; color: #721c24; }
+        .stats { display: flex; justify-content: space-around; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #4a90d9; }
+        .stat-label { font-size: 14px; color: #666; }
+        .hidden { display: none; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #e8e8e8; border-radius: 8px; cursor: pointer; }
+        .tab.active { background: #4a90d9; color: white; }
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table th, .leaderboard-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .leaderboard-table th { color: #666; font-size: 14px; }
+        .rank-1 { color: gold; font-weight: bold; }
+        .rank-2 { color: silver; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Арифметический тренажёр</h1>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('auth')">Вход</div>
+            <div class="tab" onclick="showTab('trainer')">Тренажёр</div>
+            <div class="tab" onclick="showTab('stats')">Статистика</div>
+            <div class="tab" onclick="showTab('leaderboard')">Рейтинг</div>
+        </div>
+
+        <!-- Авторизация -->
+        <div id="authTab" class="card">
+            <h3>Вход / Регистрация</h3>
+            <input id="username" placeholder="Логин" />
+            <input id="password" type="password" placeholder="Пароль" />
+            <button onclick="register()">Регистрация</button>
+            <button onclick="login()" class="secondary">Войти</button>
+            <p id="authMsg" style="text-align:center; margin-top: 8px;"></p>
+        </div>
+
+        <!-- Тренажёр -->
+        <div id="trainerTab" class="card hidden">
+            <div id="problem" class="problem">Нажми "Новый пример"</div>
+            <input id="answer" type="number" placeholder="Твой ответ" />
+            <button onclick="checkAnswer()">Проверить</button>
+            <button onclick="newProblem()" class="secondary">Новый пример</button>
+            <div id="result" class="result hidden"></div>
+        </div>
+
+        <!-- Статистика -->
+        <div id="statsTab" class="card hidden">
+            <h3>Твоя статистика</h3>
+            <div class="stats">
+                <div><div class="stat-value" id="statTotal">0</div><div class="stat-label">Решено</div></div>
+                <div><div class="stat-value" id="statCorrect">0</div><div class="stat-label">Правильно</div></div>
+                <div><div class="stat-value" id="statAccuracy">0%</div><div class="stat-label">Точность</div></div>
+            </div>
+        </div>
+
+        <!-- Рейтинг -->
+        <div id="leaderboardTab" class="card hidden">
+            <h3>Топ-10 игроков</h3>
+            <table class="leaderboard-table">
+                <thead><tr><th>#</th><th>Игрок</th><th>Точность</th></tr></thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let token = "";
+        let currentProblem = null;
+
+        function showTab(tab) {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
+            document.getElementById(tab + "Tab").classList.remove("hidden");
+            document.querySelector(`.tab:has(+ .tab:nth-child(${
+                tab === 'auth' ? 1 : tab === 'trainer' ? 2 : tab === 'stats' ? 3 : 4
+            }))`).classList.add("active");
+            // Простой способ: найдём нужную вкладку
+            document.querySelectorAll(".tab").forEach((t, i) => {
+                const tabs = ['auth', 'trainer', 'stats', 'leaderboard'];
+                if (tabs[i] === tab) t.classList.add("active");
+                else t.classList.remove("active");
+            });
+        }
+
+        async function register() {
+            const u = document.getElementById("username").value;
+            const p = document.getElementById("password").value;
+            const res = await fetch(`/auth/register?username=${u}&password=${p}`, {method: "POST"});
+            const data = await res.json();
+            document.getElementById("authMsg").textContent = data.message || data.detail || "Ошибка";
+        }
+
+        async function login() {
+            const u = document.getElementById("username").value;
+            const p = document.getElementById("password").value;
+            const res = await fetch(`/auth/login?username=${u}&password=${p}`, {method: "POST"});
+            if (res.ok) {
+                const data = await res.json();
+                token = data.access_token;
+                document.getElementById("authMsg").textContent = "Вход выполнен!";
+                showTab("trainer");
+            } else {
+                document.getElementById("authMsg").textContent = "Неверный логин или пароль";
+            }
+        }
+
+        async function api(path, method = "GET", body = null) {
+            const headers = token ? {"Authorization": `Bearer ${token}`} : {};
+            const opts = {method, headers};
+            if (body) {
+                opts.headers["Content-Type"] = "application/json";
+                opts.body = JSON.stringify(body);
+            }
+            return await fetch(path, opts);
+        }
+
+        async function newProblem() {
+            const res = await api("/trainer/problem");
+            if (res.ok) {
+                currentProblem = await res.json();
+                document.getElementById("problem").textContent = currentProblem.question;
+                document.getElementById("answer").value = "";
+                document.getElementById("result").classList.add("hidden");
+            }
+        }
+
+        async function checkAnswer() {
+            if (!currentProblem) return;
+            const userAnswer = parseInt(document.getElementById("answer").value);
+            const res = await api("/trainer/check", "POST", {
+                problem_id: currentProblem.id,
+                user_answer: userAnswer
+            });
+            const data = await res.json();
+            const resultDiv = document.getElementById("result");
+            resultDiv.classList.remove("hidden", "correct", "wrong");
+            if (data.correct) {
+                resultDiv.textContent = "✅ Правильно!";
+                resultDiv.classList.add("correct");
+            } else {
+                resultDiv.textContent = `❌ Неправильно! Ответ: ${data.correct_answer}`;
+                resultDiv.classList.add("wrong");
+            }
+            updateStats();
+        }
+
+        async function updateStats() {
+            const res = await api("/trainer/stats");
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById("statTotal").textContent = data.total_attempts;
+                document.getElementById("statCorrect").textContent = data.correct_attempts;
+                document.getElementById("statAccuracy").textContent = data.accuracy + "%";
+            }
+        }
+
+        async function loadLeaderboard() {
+            const res = await fetch("/leaderboard/");
+            const data = await res.json();
+            const tbody = document.getElementById("leaderboardBody");
+            tbody.innerHTML = data.map((entry, i) => {
+                let rankClass = "";
+                if (entry.rank === 1) rankClass = "rank-1";
+                else if (entry.rank === 2) rankClass = "rank-2";
+                else if (entry.rank === 3) rankClass = "rank-3";
+                return `<tr>
+                    <td class="${rankClass}">${entry.rank}</td>
+                    <td>${entry.username}</td>
+                    <td>${entry.accuracy}%</td>
+                </tr>`;
+            }).join("");
+        }
+
+        // Обновление рейтинга при переключении на вкладку
+        document.querySelectorAll(".tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                if (tab.textContent.includes("Рейтинг")) loadLeaderboard();
+                if (tab.textContent.includes("Статистика")) updateStats();
+            });
+        });
+    </script>
+</body>
+</html>

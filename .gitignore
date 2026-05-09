@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Базы данных
+*.db
+*.sqlite
+
+# Логи
+*.log
+
+# Тесты
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Мониторинг
+prometheus_data/
+grafana_data/
