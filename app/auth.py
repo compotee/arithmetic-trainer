@@ -25,9 +25,12 @@ def login(username: str, password: str):
         raise HTTPException(status_code=401, detail="Неверный логин или пароль")
 
     token = jwt.encode(
-        {"username": username, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)},
+        {
+            "username": username,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+        },
         SECRET_KEY,
-        algorithm="HS256"
+        algorithm="HS256",
     )
     return {"access_token": token, "token_type": "bearer"}
 
@@ -40,4 +43,3 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         raise HTTPException(status_code=401, detail="Токен истёк")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Неверный токен")
-    

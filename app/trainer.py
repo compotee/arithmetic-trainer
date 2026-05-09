@@ -39,7 +39,7 @@ def check_answer(request: CheckRequest, username: str = Depends(get_current_user
         return CheckResponse(correct=False, correct_answer=0)
 
     correct_answer = problems_db[request.problem_id]
-    is_correct = (request.user_answer == correct_answer)
+    is_correct = request.user_answer == correct_answer
 
     # Сохраняем статистику
     if username not in stats_db:
@@ -61,5 +61,5 @@ def get_stats(username: str = Depends(get_current_user)):
         username=username,
         total_attempts=stats["total"],
         correct_attempts=stats["correct"],
-        accuracy=round(accuracy, 1)
+        accuracy=round(accuracy, 1),
     )

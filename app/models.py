@@ -40,4 +40,3 @@ class LeaderboardEntry(BaseModel):
     rank: int
     username: str
     accuracy: float
-    

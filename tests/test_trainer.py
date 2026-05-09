@@ -29,4 +29,3 @@ def test_generate_problem_answer_is_correct():
         expected = int(parts[0]) * int(parts[1])
 
     assert problem.answer == expected
-    

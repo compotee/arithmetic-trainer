@@ -11,13 +11,15 @@ def get_leaderboard():
     leaderboard = []
     for username, stats in stats_db.items():
         if stats["total"] >= 5:  # Минимум 5 попыток для попадания в рейтинг
-            accuracy = (stats["correct"] / stats["total"] * 100)
+            accuracy = stats["correct"] / stats["total"] * 100
             leaderboard.append({"username": username, "accuracy": accuracy})
 
     leaderboard.sort(key=lambda x: x["accuracy"], reverse=True)
     top10 = leaderboard[:10]
 
     return [
-        LeaderboardEntry(rank=i+1, username=entry["username"], accuracy=round(entry["accuracy"], 1))
+        LeaderboardEntry(
+            rank=i + 1, username=entry["username"], accuracy=round(entry["accuracy"], 1)
+        )
         for i, entry in enumerate(top10)
     ]

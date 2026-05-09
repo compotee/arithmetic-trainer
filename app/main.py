@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+
+# from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.auth import router as auth_router
 from app.trainer import router as trainer_router
