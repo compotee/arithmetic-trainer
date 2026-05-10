@@ -1,0 +1,41 @@
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Высокий уровень ошибок API"
+          description: "Уровень 5xx ошибок {{ $value | printf \"%.2f\" }}% превышает порог 5%"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket[5m])
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Высокая задержка API"
+          description: "95-й перцентиль latency {{ $value | printf \"%.2f\" }}s превышает 500мс"
+
+      - alert: ServiceDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Сервис API недоступен"
+          description: "Prometheus не может получить метрики с API более 1 минуты"

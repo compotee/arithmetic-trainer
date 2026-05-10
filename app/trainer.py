@@ -4,6 +4,7 @@ import random
 from app.database import get_db
 from app.models import Problem, Attempt, User
 from app.auth import get_current_user
+from app.metrics import trainer_problems_generated, trainer_answers_total
 
 router = APIRouter()
 
@@ -29,7 +30,9 @@ def generate_problem(db: Session) -> Problem:
 def get_problem(
     username: str = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    return generate_problem(db)
+    problem = generate_problem(db)
+    trainer_problems_generated.inc()
+    return problem
 
 
 @router.post("/check")
@@ -54,6 +57,8 @@ def check_answer(
     )
     db.add(attempt)
     db.commit()
+
+    trainer_answers_total.labels(result="correct" if is_correct else "wrong").inc()
 
     return {"correct": is_correct, "correct_answer": problem.answer}
 
