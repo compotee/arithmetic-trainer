@@ -18,6 +18,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
       - run: pip install flake8 black
       - run: flake8 app/ tests/ --max-line-length=100
       - run: black --check app/ tests/
@@ -46,6 +47,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
       - run: pip install -r requirements.txt
       - run: pytest tests/ -v
 
@@ -57,8 +59,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install bandit
+          cache: "pip"
+      - run: pip install bandit pip-audit
       - run: bandit -r app/ -ll
+      - run: pip-audit --requirement requirements.txt
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -82,3 +86,5 @@ jobs:
         with:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
