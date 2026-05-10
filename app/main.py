@@ -1,11 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, Response
-from app.metrics import (
-    http_requests_total,
-    http_request_duration_seconds,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
+from app.metrics import http_requests_total, http_request_duration_seconds
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import time
 from app.auth import router as auth_router
 from app.trainer import router as trainer_router
